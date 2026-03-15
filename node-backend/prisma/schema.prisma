@@ -1,0 +1,84 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  username  String   @unique
+  password  String
+  grade     String?  // 学段 (初一/初二/初三/高一/高二/高三)
+  level     String?  // 学力 (基础/中等/拔高)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tutoringSessions TutoringSession[]
+  mistakes         MistakeRecord[]
+  appUploads       AppUpload[]
+}
+
+// 辅导会话 (每次做题产生一个会话)
+model TutoringSession {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  problemText String   // 题目文本
+  mode        String   @default("通用辅导") // 通用辅导, 查漏补缺, 错题复习, 专项突破
+  status      String   @default("IN_PROGRESS") // IN_PROGRESS, COMPLETED
+  currentStep Int      @default(0) // 0:理解题意 1:设未知数 2:列方程 3:求解
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  messages    ChatMessage[]
+}
+
+// 辅导对话记录
+model ChatMessage {
+  id        String   @id @default(uuid())
+  sessionId String
+  session   TutoringSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  role      String   // 'ai' or 'user'
+  text      String
+  createdAt DateTime @default(now())
+}
+
+// 错题记录
+model MistakeRecord {
+  id             String   @id @default(uuid())
+  userId         String
+  user           User     @relation(fields: [userId], references: [id])
+  problemText    String   // 题目
+  errorType      String   // 错误类型：审题错误、设元错误、列式错误、计算错误
+  knowledgePoint String   // 薄弱知识点
+  status         String   @default("待巩固") // 待巩固, 已复习
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+// APP端拍照上传的历史题目
+model AppUpload {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  problemText String
+  imageUrl    String?  // 假设APP上传了图片
+  status      String   @default("未辅导") // 未辅导, 已辅导
+  createdAt   DateTime @default(now())
+}
+
+// 系统的题库
+model ProblemBank {
+  id             String   @id @default(uuid())
+  text           String
+  grade          String?  // 学段
+  difficulty     String?  // 难度
+  knowledgePoint String?  // 知识点
+  createdAt      DateTime @default(now())
+}
