@@ -1,0 +1,321 @@
+[
+  {
+    "problem_id": "eq_001",
+    "title": "解方程：2(x-1)/3 = 4",
+    "grade": "七年级",
+    "topic": "一元一次方程",
+    "subtopic": "去分母",
+    "knowledge_points": ["去分母", "去括号", "移项", "系数化为1"],
+    "difficulty": "medium",
+    "steps": [
+      {
+        "step_number": 1,
+        "description": "去分母",
+        "correct_action": "等式两边同乘3，得 2(x-1) = 12",
+        "common_errors": [
+          {
+            "error_id": "eq_001_s1_e1",
+            "error_type": "漏乘",
+            "wrong_action": "2(x-1) = 4",
+            "why_wrong": "忘记等式右边也要乘3，只对左边去分母",
+            "hint": "去分母时，等式两边每一项都要乘分母的最小公倍数，包括不含分母的项",
+            "frequency": "high"
+          },
+          {
+            "error_id": "eq_001_s1_e2",
+            "error_type": "漏加括号",
+            "wrong_action": "2x-1 = 12",
+            "why_wrong": "分子是多项式2(x-1)，去分母后忘记加括号，导致-1没有乘2",
+            "hint": "当分子是多项式时，去分母后要给分子加上括号，确保每一项都乘",
+            "frequency": "high"
+          }
+        ]
+      },
+      {
+        "step_number": 2,
+        "description": "去括号",
+        "correct_action": "2x - 2 = 12",
+        "common_errors": [
+          {
+            "error_id": "eq_001_s2_e1",
+            "error_type": "符号错误",
+            "wrong_action": "2x + 2 = 12",
+            "why_wrong": "括号前是正数2，去括号时-2变成了+2，符号错误",
+            "hint": "括号前是正号，去括号后各项符号不变；括号前是负号，各项要变号",
+            "frequency": "medium"
+          },
+          {
+            "error_id": "eq_001_s2_e2",
+            "error_type": "漏乘",
+            "wrong_action": "2x - 1 = 12",
+            "why_wrong": "用2乘括号内的-1时，只乘了系数，没有乘常数项",
+            "hint": "去括号时，括号外的数要乘以括号内的每一项",
+            "frequency": "medium"
+          }
+        ]
+      },
+      {
+        "step_number": 3,
+        "description": "移项",
+        "correct_action": "2x = 12 + 2，即 2x = 14",
+        "common_errors": [
+          {
+            "error_id": "eq_001_s3_e1",
+            "error_type": "移项不变号",
+            "wrong_action": "2x = 12 - 2",
+            "why_wrong": "把-2移到右边时没有变号，移项要变号",
+            "hint": "移项要变号：把一项从等式一边移到另一边，要改变它的符号",
+            "frequency": "high"
+          }
+        ]
+      },
+      {
+        "step_number": 4,
+        "description": "系数化为1",
+        "correct_action": "x = 7",
+        "common_errors": [
+          {
+            "error_id": "eq_001_s4_e1",
+            "error_type": "计算错误",
+            "wrong_action": "x = 14/2 = 6",
+            "why_wrong": "14除以2计算错误，应该是7而不是6",
+            "hint": "仔细计算：14 ÷ 2 = 7",
+            "frequency": "low"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "problem_id": "eq_002",
+    "title": "解方程：3x - 7 = 2x + 5",
+    "grade": "七年级",
+    "topic": "一元一次方程",
+    "subtopic": "移项合并",
+    "knowledge_points": ["移项", "合并同类项", "系数化为1"],
+    "difficulty": "easy",
+    "steps": [
+      {
+        "step_number": 1,
+        "description": "移项",
+        "correct_action": "3x - 2x = 5 + 7",
+        "common_errors": [
+          {
+            "error_id": "eq_002_s1_e1",
+            "error_type": "移项不变号",
+            "wrong_action": "3x + 2x = 5 - 7",
+            "why_wrong": "移项时没有变号，2x移到左边应该变成-2x，-7移到右边应该变成+7",
+            "hint": "记住口诀：移项要变号，过桥（等号）就变脸",
+            "frequency": "high"
+          }
+        ]
+      },
+      {
+        "step_number": 2,
+        "description": "合并同类项",
+        "correct_action": "x = 12",
+        "common_errors": [
+          {
+            "error_id": "eq_002_s2_e1",
+            "error_type": "合并错误",
+            "wrong_action": "5x = -2",
+            "why_wrong": "把系数和常数项混淆了，3x-2x=x，5+7=12",
+            "hint": "合并同类项时，字母部分不变，系数相加减",
+            "frequency": "medium"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "problem_id": "eq_003",
+    "title": "解方程：5(x-2) = 2(3x+1) - 12",
+    "grade": "七年级",
+    "topic": "一元一次方程",
+    "subtopic": "去括号",
+    "knowledge_points": ["去括号", "移项", "合并同类项"],
+    "difficulty": "medium",
+    "steps": [
+      {
+        "step_number": 1,
+        "description": "去括号",
+        "correct_action": "5x - 10 = 6x + 2 - 12",
+        "common_errors": [
+          {
+            "error_id": "eq_003_s1_e1",
+            "error_type": "漏乘",
+            "wrong_action": "5x - 2 = 6x + 1 - 12",
+            "why_wrong": "用5乘-2应该是-10，不是-2；用2乘1应该是2，不是1",
+            "hint": "去括号时，括号外的数要乘以括号内的每一项，包括常数项",
+            "frequency": "high"
+          },
+          {
+            "error_id": "eq_003_s1_e2",
+            "error_type": "符号错误",
+            "wrong_action": "5x - 10 = 6x - 2 - 12",
+            "why_wrong": "括号前是正数2，去括号后+2变成了-2",
+            "hint": "括号前是正号，去括号后各项符号不变",
+            "frequency": "medium"
+          }
+        ]
+      },
+      {
+        "step_number": 2,
+        "description": "合并常数项",
+        "correct_action": "5x - 10 = 6x - 10",
+        "common_errors": [
+          {
+            "error_id": "eq_003_s2_e1",
+            "error_type": "计算错误",
+            "wrong_action": "5x - 10 = 6x + 14",
+            "why_wrong": "2-12=-10，不是14，符号搞错了",
+            "hint": "正数加负数等于减法：2 + (-12) = 2 - 12 = -10",
+            "frequency": "medium"
+          }
+        ]
+      },
+      {
+        "step_number": 3,
+        "description": "移项合并",
+        "correct_action": "5x - 6x = -10 + 10，即 -x = 0",
+        "common_errors": [
+          {
+            "error_id": "eq_003_s3_e1",
+            "error_type": "符号错误",
+            "wrong_action": "5x + 6x = -10 - 10",
+            "why_wrong": "移项时符号都搞错了，6x移到左边应该是-6x，-10移到右边应该是+10",
+            "hint": "移项要变号，记住：过桥就变脸",
+            "frequency": "high"
+          }
+        ]
+      },
+      {
+        "step_number": 4,
+        "description": "系数化为1",
+        "correct_action": "x = 0",
+        "common_errors": [
+          {
+            "error_id": "eq_003_s4_e1",
+            "error_type": "符号错误",
+            "wrong_action": "x = 0 或 x = -0",
+            "why_wrong": "-x = 0 两边同乘-1，得 x = 0，不需要加负号",
+            "hint": "-x = a 的解是 x = -a，但当a=0时，x=0",
+            "frequency": "low"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "problem_id": "eqsys_001",
+    "title": "解方程组：{2x + y = 5, x - y = 1}",
+    "grade": "七年级",
+    "topic": "二元一次方程组",
+    "subtopic": "加减消元法",
+    "knowledge_points": ["加减消元", "代入求解", "回代检验"],
+    "difficulty": "easy",
+    "steps": [
+      {
+        "step_number": 1,
+        "description": "加减消元",
+        "correct_action": "两式相加：3x = 6",
+        "common_errors": [
+          {
+            "error_id": "eqsys_001_s1_e1",
+            "error_type": "消元选择错误",
+            "wrong_action": "两式相减：x + 2y = 4",
+            "why_wrong": "y的系数是1和-1，应该相加消去y，而不是相减",
+            "hint": "观察系数：如果某未知数系数互为相反数，用加法消元；如果相等，用减法消元",
+            "frequency": "high"
+          }
+        ]
+      },
+      {
+        "step_number": 2,
+        "description": "求解x",
+        "correct_action": "x = 2",
+        "common_errors": [
+          {
+            "error_id": "eqsys_001_s2_e1",
+            "error_type": "计算错误",
+            "wrong_action": "x = 3",
+            "why_wrong": "3x = 6，x = 6/3 = 2，不是3",
+            "hint": "6除以3等于2，仔细计算",
+            "frequency": "low"
+          }
+        ]
+      },
+      {
+        "step_number": 3,
+        "description": "回代求y",
+        "correct_action": "代入x=2到第二个方程：2 - y = 1，得 y = 1",
+        "common_errors": [
+          {
+            "error_id": "eqsys_001_s3_e1",
+            "error_type": "代入错误",
+            "wrong_action": "代入到第一个方程：2*2 + y = 5，得 y = 1（虽然答案对，但计算复杂）",
+            "why_wrong": "选择复杂的方程代入，容易出错。应该选系数简单的方程",
+            "hint": "回代时选择系数简单的方程，减少计算错误",
+            "frequency": "medium"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "problem_id": "eqsys_002",
+    "title": "解方程组：{3x + 2y = 12, 2x - y = 7}",
+    "grade": "七年级",
+    "topic": "二元一次方程组",
+    "subtopic": "代入消元法",
+    "knowledge_points": ["代入消元", "变形", "求解"],
+    "difficulty": "medium",
+    "steps": [
+      {
+        "step_number": 1,
+        "description": "变形为用x表示y",
+        "correct_action": "从第二个方程得：y = 2x - 7",
+        "common_errors": [
+          {
+            "error_id": "eqsys_002_s1_e1",
+            "error_type": "移项错误",
+            "wrong_action": "y = 2x + 7",
+            "why_wrong": "-y = 7 - 2x，两边乘-1得 y = 2x - 7，不是+7",
+            "hint": "移项要变号：-y = 7 - 2x，y = -(7 - 2x) = 2x - 7",
+            "frequency": "high"
+          }
+        ]
+      },
+      {
+        "step_number": 2,
+        "description": "代入消元",
+        "correct_action": "3x + 2(2x-7) = 12",
+        "common_errors": [
+          {
+            "error_id": "eqsys_002_s2_e1",
+            "error_type": "漏括号",
+            "wrong_action": "3x + 2*2x - 7 = 12",
+            "why_wrong": "代入2(2x-7)时，2要乘括号内的每一项，包括-7",
+            "hint": "代入多项式时要加括号，确保每一项都乘系数",
+            "frequency": "high"
+          }
+        ]
+      },
+      {
+        "step_number": 3,
+        "description": "去括号并求解",
+        "correct_action": "3x + 4x - 14 = 12，7x = 26，x = 26/7",
+        "common_errors": [
+          {
+            "error_id": "eqsys_002_s3_e1",
+            "error_type": "计算错误",
+            "wrong_action": "7x = 12 + 14 = 26，x = 26",
+            "why_wrong": "忘记除以7，26是7x的值，不是x的值",
+            "hint": "最后一步记得系数化为1，两边同除以7",
+            "frequency": "medium"
+          }
+        ]
+      }
+    ]
+  }
+]
