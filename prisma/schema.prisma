@@ -1,0 +1,88 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  username  String   @unique
+  password  String
+  grade     String?
+  level     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tutoringSessions TutoringSession[]
+  mistakes         MistakeRecord[]
+  appUploads       AppUpload[]
+}
+
+model TutoringSession {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  problemText String
+  mode        String   @default("通用辅导")
+  status      String   @default("IN_PROGRESS")
+  currentStep Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  messages    ChatMessage[]
+}
+
+model ChatMessage {
+  id        String          @id @default(uuid())
+  sessionId String
+  session   TutoringSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  role      String
+  text      String
+  createdAt DateTime        @default(now())
+}
+
+model MistakeRecord {
+  id             String   @id @default(uuid())
+  userId         String
+  user           User     @relation(fields: [userId], references: [id])
+  problemText    String
+  errorType      String?
+  knowledgePoint String?
+  status         String   @default("待复习")
+  createdAt      DateTime @default(now())
+}
+
+model AppUpload {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  questionId  String
+  grade       String
+  imageUrl    String
+  ocrText     String?
+  status      String   @default("pending")
+  createdAt   DateTime @default(now())
+}
+
+model ProblemBank {
+  id        String   @id @default(uuid())
+  grade     String
+  content   String
+  answer    String?
+  createdAt DateTime @default(now())
+}
+
+model RawProblem {
+  id          String   @id @default(uuid())
+  questionId  String   @unique
+  grade       String
+  imageUrl    String
+  ocrText     String?
+  ocrLines    String?
+  processedContent String?
+  status      String   @default("pending")
+  createdAt   DateTime @default(now())
+}
