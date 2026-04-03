@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const { problemText, mode = '通用辅导' } = await request.json()
+    const { problemText, mode = '通用辅导', timeLimit } = await request.json()
 
     if (!problemText) {
       return NextResponse.json(
@@ -38,7 +38,8 @@ export async function POST(request: NextRequest) {
         problemText,
         mode,
         status: 'IN_PROGRESS',
-        currentStep: 0
+        currentStep: 0,
+        timeLimit: timeLimit ? parseInt(timeLimit) : null
       }
     })
 
@@ -56,6 +57,7 @@ export async function POST(request: NextRequest) {
       problemText: session.problemText,
       mode: session.mode,
       currentStep: session.currentStep,
+      timeLimit: session.timeLimit,
       messages: [initialMessage]
     }, { status: 201 })
   } catch (error) {

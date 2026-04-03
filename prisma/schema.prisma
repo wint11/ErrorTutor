@@ -29,6 +29,7 @@ model TutoringSession {
   mode        String   @default("通用辅导")
   status      String   @default("IN_PROGRESS")
   currentStep Int      @default(0)
+  timeLimit   Int?     // 限时挑战的时间（分钟），如果不限时则为 null
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 

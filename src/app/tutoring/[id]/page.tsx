@@ -1,8 +1,8 @@
 'use client'
 
 import React, { useEffect, useState, useRef } from 'react'
-import { Card, Input, Button, Steps, Typography, Tag, message } from 'antd'
-import { RobotOutlined, SendOutlined } from '@ant-design/icons'
+import { Input, Button, Steps, Typography, Tag, message, Space, Statistic } from 'antd'
+import { RobotOutlined, SendOutlined, ClockCircleOutlined } from '@ant-design/icons'
 import { useParams, useRouter } from 'next/navigation'
 import { tutoringApi } from '@/lib/api'
 
@@ -25,6 +25,10 @@ export default function TutoringSession() {
   const [loading, setLoading] = useState(false)
   const [chatInput, setChatInput] = useState('')
   const [chatHistory, setChatHistory] = useState<ChatMessage[]>([])
+  
+  const [timeLimit, setTimeLimit] = useState<number | null>(null)
+  const [deadline, setDeadline] = useState<number | null>(null)
+  const [isTimeUp, setIsTimeUp] = useState(false)
 
   const chatEndRef = useRef<HTMLDivElement>(null)
 
@@ -44,6 +48,13 @@ export default function TutoringSession() {
       setProblemText(res.data.problemText)
       setCurrentStep(res.data.currentStep)
       setMode(res.data.mode || '通用辅导')
+      
+      if (res.data.timeLimit) {
+        setTimeLimit(res.data.timeLimit)
+        // 假设创建会话即为开始时间
+        const startTime = new Date(res.data.createdAt || Date.now()).getTime()
+        setDeadline(startTime + res.data.timeLimit * 60 * 1000)
+      }
       
       const messagesRes: any = await tutoringApi.getMessages(sid)
       setChatHistory(messagesRes.data || [])
@@ -76,49 +87,82 @@ export default function TutoringSession() {
   }
 
   return (
-    <div className="w-full flex-1 py-4 md:py-6 flex flex-col h-[calc(100vh-64px)]">
-      <div className="w-full h-full flex flex-col lg:flex-row gap-6">
-        <div className="w-full lg:w-1/3 flex flex-col gap-6">
-          <Card title="当前题目" className="rounded-xl shadow-sm border-slate-100">
-            <div className="max-h-[200px] overflow-y-auto">
-              <Paragraph className="text-base leading-relaxed text-slate-700">{problemText}</Paragraph>
+    <div className="w-full flex-1 py-4 md:py-6 flex flex-col">
+      <div className="w-full h-[calc(100vh-120px)] flex flex-col lg:flex-row gap-6 max-w-7xl mx-auto">
+        {/* 左侧：题目与进度 */}
+        <div className="w-full lg:w-1/3 flex flex-col gap-6 h-full">
+          <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex flex-col">
+            <div className="p-4 border-b border-slate-100 bg-slate-50">
+              <h3 className="font-bold text-slate-800 m-0">当前题目</h3>
             </div>
-            <div className="mt-4 pt-4 border-t border-slate-100">
-              <Tag color="blue">中学数学</Tag>
-              <Tag color="purple">{mode}</Tag>
+            <div className="p-4 flex-grow overflow-y-auto max-h-[250px]">
+              <Paragraph className="text-base leading-relaxed text-slate-700 m-0">{problemText}</Paragraph>
             </div>
-          </Card>
+            <div className="p-4 border-t border-slate-100 bg-slate-50">
+              <Space>
+                <Tag color="blue" className="rounded-full px-3 py-1">中学数学</Tag>
+                <Tag color="purple" className="rounded-full px-3 py-1">{mode}</Tag>
+              </Space>
+            </div>
+          </div>
 
-          <Card title="解题进度" className="rounded-xl shadow-sm border-slate-100 hidden lg:block flex-grow">
-            <Steps
-              direction="vertical"
-              current={currentStep}
-              items={[
-                { title: '理解题意', description: '提取已知条件和所求' },
-                { title: '知识点映射', description: '关联核心数学概念' },
-                { title: '逻辑建模', description: '寻找等量关系' },
-                { title: '求解验算', description: '计算过程' }
-              ]}
-            />
-          </Card>
+          <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden hidden lg:flex flex-col flex-grow">
+            <div className="p-4 border-b border-slate-100 bg-slate-50">
+              <h3 className="font-bold text-slate-800 m-0">解题进度</h3>
+            </div>
+            <div className="p-6 flex-grow overflow-y-auto">
+              <Steps
+                orientation="vertical"
+                current={currentStep}
+                items={[
+                  { title: '理解题意', content: '提取已知条件和所求' },
+                  { title: '知识点映射', content: '关联核心数学概念' },
+                  { title: '逻辑建模', content: '寻找等量关系' },
+                  { title: '求解验算', content: '计算过程' },
+                ]}
+              />
+            </div>
+          </div>
         </div>
 
-        <Card className="w-full lg:w-2/3 rounded-xl shadow-sm border-slate-100 flex flex-col h-full">
-          <div className="bg-blue-50 p-4 border-b border-blue-100 flex items-center justify-between">
+        {/* 右侧：聊天主界面 */}
+        <div className="w-full lg:w-2/3 bg-white rounded-xl shadow-sm border border-slate-200 flex flex-col h-full overflow-hidden">
+          <div className="bg-blue-50 p-4 border-b border-blue-100 flex items-center justify-between shadow-sm z-10">
             <div className="flex items-center text-blue-800 font-bold text-lg">
               <RobotOutlined className="mr-2 text-2xl" />
               AI 专属导师 - {mode}
             </div>
+            {deadline && !isTimeUp && (
+              <div className="flex items-center bg-white px-4 py-1.5 rounded-full shadow-sm border border-blue-100">
+                <ClockCircleOutlined className="text-red-500 mr-2" />
+                <Statistic.Countdown 
+                  value={deadline} 
+                  onFinish={() => setIsTimeUp(true)}
+                  valueStyle={{ fontSize: '16px', fontWeight: 'bold', color: '#ef4444' }}
+                  format="mm:ss"
+                />
+              </div>
+            )}
+            {isTimeUp && (
+              <Tag color="red" className="m-0 text-sm font-bold py-1 px-3 border-red-200">
+                <ClockCircleOutlined className="mr-1" /> 时间到！已锁定输入
+              </Tag>
+            )}
           </div>
           
-          <div className="flex-grow p-6 overflow-y-auto flex flex-col gap-4 bg-slate-50">
+          <div className="flex-grow p-6 overflow-y-auto flex flex-col gap-6 bg-slate-50/50">
             {chatHistory.map((msg) => (
               <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                {msg.role === 'ai' && (
+                  <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center mr-3 flex-shrink-0 mt-1">
+                    <RobotOutlined className="text-blue-600" />
+                  </div>
+                )}
                 <div 
-                  className={`max-w-[80%] p-4 rounded-2xl shadow-sm ${
+                  className={`max-w-[80%] p-4 rounded-2xl shadow-sm leading-relaxed ${
                     msg.role === 'user' 
-                      ? 'bg-blue-500 text-white rounded-br-sm' 
-                      : 'bg-white text-slate-800 rounded-bl-sm border border-slate-100'
+                      ? 'bg-blue-600 text-white rounded-tr-sm' 
+                      : 'bg-white text-slate-800 rounded-tl-sm border border-slate-200'
                   }`}
                 >
                   {msg.text}
@@ -128,30 +172,30 @@ export default function TutoringSession() {
             <div ref={chatEndRef} />
           </div>
 
-          <div className="p-4 border-t border-slate-100 bg-white">
-            <div className="flex gap-3">
+          <div className="p-4 border-t border-slate-200 bg-white">
+            <div className="flex gap-3 max-w-4xl mx-auto">
               <Input 
                 size="large" 
-                placeholder="输入你的想法或答案..." 
+                placeholder={isTimeUp ? "限时已结束，已锁定输入" : "输入你的想法或答案..."} 
                 value={chatInput}
                 onChange={(e) => setChatInput(e.target.value)}
                 onPressEnter={handleSendChat}
-                disabled={loading}
-                className="rounded-xl"
+                disabled={loading || isTimeUp}
+                className="rounded-xl h-12"
               />
               <Button 
                 type="primary" 
                 size="large" 
                 icon={<SendOutlined />} 
                 onClick={handleSendChat}
-                disabled={loading}
-                className="rounded-xl px-6 bg-blue-600"
+                disabled={loading || isTimeUp}
+                className="rounded-xl px-8 h-12 font-bold bg-blue-600 hover:bg-blue-700 shadow-md shadow-blue-200"
               >
                 发送
               </Button>
             </div>
           </div>
-        </Card>
+        </div>
       </div>
     </div>
   )

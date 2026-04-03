@@ -42,8 +42,8 @@ export const authApi = {
 
 // 辅导相关
 export const tutoringApi = {
-  createSession: (problemText: string, mode?: string) =>
-    api.post('/tutoring/sessions', { problemText, mode }),
+  createSession: (problemText: string, mode?: string, timeLimit?: number) =>
+    api.post('/tutoring/sessions', { problemText, mode, timeLimit }),
   getSession: (sessionId: string) => api.get(`/tutoring/sessions/${sessionId}`),
   sendMessage: (sessionId: string, text: string) =>
     api.post(`/tutoring/sessions/${sessionId}/messages`, { text }),
