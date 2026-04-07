@@ -4,13 +4,14 @@ import React, { useState } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { Button, Menu, Avatar, Dropdown, Drawer } from 'antd'
-import { UserOutlined, LogoutOutlined, MenuOutlined, AppstoreOutlined, RobotOutlined, LineChartOutlined } from '@ant-design/icons'
+import { UserOutlined, LogoutOutlined, MenuOutlined, AppstoreOutlined, RobotOutlined, LineChartOutlined, BookOutlined } from '@ant-design/icons'
 import { useUserStore } from '@/store/userStore'
 
 const menuItems = [
   { key: '/dashboard', label: '学习中心', icon: <AppstoreOutlined /> },
   { key: '/tutoring', label: '智能辅导', icon: <RobotOutlined /> },
   { key: '/growth', label: '成长轨迹', icon: <LineChartOutlined /> },
+  { key: '/knowledge', label: '知识图谱', icon: <BookOutlined /> },
 ]
 
 export default function Navbar() {
@@ -32,7 +33,7 @@ export default function Navbar() {
     items: [
       {
         key: 'profile',
-        label: <Link href="/profile">个人设置</Link>,
+        label: <Link href="/profile">个人信息</Link>,
         icon: <UserOutlined />,
       },
       { type: 'divider' as const },

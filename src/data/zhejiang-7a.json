@@ -1,0 +1,40 @@
+{
+  "version": "浙教版",
+  "grade": "初一上",
+  "nodes": [
+    {
+      "id": "zhejiang-7a-1",
+      "chapter": "第一章 有理数",
+      "title": "有理数",
+      "level": 1,
+      "children": [
+        {
+          "id": "zhejiang-7a-1-1",
+          "title": "正数与负数",
+          "level": 2,
+          "children": []
+        },
+        {
+          "id": "zhejiang-7a-1-2",
+          "title": "数轴",
+          "level": 2,
+          "children": []
+        }
+      ]
+    },
+    {
+      "id": "zhejiang-7a-2",
+      "chapter": "第二章 有理数的运算",
+      "title": "有理数的运算",
+      "level": 1,
+      "children": [
+        {
+          "id": "zhejiang-7a-2-1",
+          "title": "有理数的加法",
+          "level": 2,
+          "children": []
+        }
+      ]
+    }
+  ]
+}

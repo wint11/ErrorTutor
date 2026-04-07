@@ -13,27 +13,50 @@ model User {
   password  String
   grade     String?
   level     String?
+  textbookVersion String? @default("人教版")
+  aiPortrait      String?
+  aiPortraitUpdatedAt DateTime?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   tutoringSessions TutoringSession[]
   mistakes         MistakeRecord[]
   appUploads       AppUpload[]
+  masteredNodes    UserMasteredNode[]
+}
+
+model UserMasteredNode {
+  id             String   @id @default(uuid())
+  userId         String
+  user           User     @relation(fields: [userId], references: [id])
+  nodeId         String
+  errorCount     Int      @default(0)
+  totalPracticed Int      @default(0)
+  isMastered     Boolean  @default(false)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @default(now()) @updatedAt
+
+  @@unique([userId, nodeId])
 }
 
 model TutoringSession {
-  id          String   @id @default(uuid())
-  userId      String
-  user        User     @relation(fields: [userId], references: [id])
-  problemText String
-  mode        String   @default("通用辅导")
-  status      String   @default("IN_PROGRESS")
-  currentStep Int      @default(0)
-  timeLimit   Int?     // 限时挑战的时间（分钟），如果不限时则为 null
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id             String   @id @default(uuid())
+  groupId        String?  // 用于将多次“再来一题”或批量生成的题目关联在一起
+  userId         String
+  user           User     @relation(fields: [userId], references: [id])
+  problemText    String
+  knowledgePoint String?  // AI 解析出的核心知识点
+  topic          String?  // 选定的知识点名称（用于查漏补缺和专项突破）
+  mistakeText    String?  // 选定的错题内容（用于错题复习）
+  mode           String   @default("通用辅导")
+  difficulty     String?  // 题目难度
+  status         String   @default("IN_PROGRESS") // 可以是 PENDING, IN_PROGRESS, COMPLETED
+  currentStep    Int      @default(0)
+  timeLimit      Int?     // 限时挑战的时间（分钟），如果不限时则为 null
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
-  messages    ChatMessage[]
+  messages       ChatMessage[]
 }
 
 model ChatMessage {

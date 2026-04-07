@@ -9,14 +9,19 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: '未授权或令牌无效' }, { status: 401 })
     }
 
-    const history = await prisma.appUpload.findMany({
+    const stats = await prisma.userMasteredNode.findMany({
       where: { userId: payload.userId },
-      orderBy: { createdAt: 'desc' }
+      select: {
+        nodeId: true,
+        errorCount: true,
+        totalPracticed: true,
+        isMastered: true
+      }
     })
 
-    return NextResponse.json(history)
+    return NextResponse.json(stats)
   } catch (error) {
-    console.error('Get history error:', error)
-    return NextResponse.json({ error: '获取历史题目失败' }, { status: 500 })
+    console.error('Get knowledge stats error:', error)
+    return NextResponse.json({ error: '获取知识图谱统计失败' }, { status: 500 })
   }
 }

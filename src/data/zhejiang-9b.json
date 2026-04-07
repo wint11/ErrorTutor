@@ -1,0 +1,66 @@
+{
+  "version": "浙教版",
+  "grade": "初三下",
+  "nodes": [
+    {
+      "id": "zhejiang-9b-1",
+      "chapter": "第一章 解直角三角形",
+      "title": "解直角三角形",
+      "level": 1,
+      "children": [
+        {
+          "id": "zhejiang-9b-1-1",
+          "title": "锐角三角函数",
+          "level": 2,
+          "children": []
+        },
+        {
+          "id": "zhejiang-9b-1-2",
+          "title": "解直角三角形的应用",
+          "level": 2,
+          "children": []
+        }
+      ]
+    },
+    {
+      "id": "zhejiang-9b-2",
+      "chapter": "第二章 直线与圆的位置关系",
+      "title": "直线与圆的位置关系",
+      "level": 1,
+      "children": [
+        {
+          "id": "zhejiang-9b-2-1",
+          "title": "直线与圆的位置关系",
+          "level": 2,
+          "children": []
+        },
+        {
+          "id": "zhejiang-9b-2-2",
+          "title": "切线的性质与判定",
+          "level": 2,
+          "children": []
+        }
+      ]
+    },
+    {
+      "id": "zhejiang-9b-3",
+      "chapter": "第三章 三视图与表面展开图",
+      "title": "三视图与表面展开图",
+      "level": 1,
+      "children": [
+        {
+          "id": "zhejiang-9b-3-1",
+          "title": "投影",
+          "level": 2,
+          "children": []
+        },
+        {
+          "id": "zhejiang-9b-3-2",
+          "title": "简单几何体的三视图",
+          "level": 2,
+          "children": []
+        }
+      ]
+    }
+  ]
+}

@@ -105,11 +105,8 @@ async def recognize_image(file: UploadFile = File(...)):
         logger.error(f"OCR error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.post("/api/v1/chat", response_model=ChatResponse)
-async def chat(request: ChatRequest):
-    """与 LLM 对话（支持记忆库上下文）"""
+async def generate_chat_response(request: ChatRequest):
     try:
-        # 如果有学生ID和题目上下文，先获取记忆上下文
         enhanced_prompt = request.prompt
         if memory_service and request.student_id and request.problem_context:
             context = memory_service.get_student_context(
@@ -121,11 +118,23 @@ async def chat(request: ChatRequest):
                 logger.info(f"已注入学生 {request.student_id} 的记忆上下文")
         
         llm = LLMFactory.create(request.provider)
-        response = await llm.chat(enhanced_prompt, request.history)
+        response = await llm.chat(
+            enhanced_prompt,
+            history=request.history
+        )
         return ChatResponse(response=response, provider=request.provider)
     except Exception as e:
         logger.error(f"Chat error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/v1/chat", response_model=ChatResponse)
+async def chat(request: ChatRequest):
+    """与 LLM 对话（支持记忆库上下文）"""
+    return await generate_chat_response(request)
+
+@app.post("/api/v1/chat/analyze", response_model=ChatResponse)
+async def analyze_chat(request: ChatRequest):
+    return await generate_chat_response(request)
 
 
 @app.post("/api/v1/memory/add")

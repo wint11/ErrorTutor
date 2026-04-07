@@ -34,13 +34,22 @@ export async function POST(request: NextRequest) {
     }
 
     const token = generateToken(user.id, user.username)
-
-    return NextResponse.json({
+    const response = NextResponse.json({
       token,
       username: user.username,
       grade: user.grade,
       level: user.level
     })
+
+    response.cookies.set('token', token, {
+      httpOnly: false,
+      sameSite: 'lax',
+      secure: process.env.NODE_ENV === 'production',
+      path: '/',
+      maxAge: 60 * 60 * 24 * 7
+    })
+
+    return response
   } catch (error) {
     console.error('Login error:', error)
     return NextResponse.json(

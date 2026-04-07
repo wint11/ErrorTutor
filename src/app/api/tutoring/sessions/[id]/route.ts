@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
-import { verifyToken } from '@/lib/auth'
+import { getAuthPayload } from '@/lib/auth'
 
 export async function GET(
   request: NextRequest,
@@ -8,16 +8,9 @@ export async function GET(
 ) {
   try {
     const { id } = await params
-    const authHeader = request.headers.get('authorization')
-    const token = authHeader?.replace('Bearer ', '')
-
-    if (!token) {
-      return NextResponse.json({ error: '未授权' }, { status: 401 })
-    }
-
-    const payload = verifyToken(token)
+    const payload = getAuthPayload(request)
     if (!payload) {
-      return NextResponse.json({ error: '无效的令牌' }, { status: 401 })
+      return NextResponse.json({ error: '未授权或令牌无效' }, { status: 401 })
     }
 
     const session = await prisma.tutoringSession.findUnique({

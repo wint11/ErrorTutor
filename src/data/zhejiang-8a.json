@@ -1,0 +1,63 @@
+{
+  "version": "浙教版",
+  "grade": "初二上",
+  "nodes": [
+    {
+      "id": "zhejiang-8a-1",
+      "chapter": "第一章 三角形的初步知识",
+      "title": "三角形的初步知识",
+      "level": 1,
+      "children": [
+        {
+          "id": "zhejiang-8a-1-1",
+          "title": "认识三角形",
+          "level": 2,
+          "children": []
+        },
+        {
+          "id": "zhejiang-8a-1-2",
+          "title": "全等三角形",
+          "level": 2,
+          "children": []
+        }
+      ]
+    },
+    {
+      "id": "zhejiang-8a-2",
+      "chapter": "第二章 特殊三角形",
+      "title": "特殊三角形",
+      "level": 1,
+      "children": [
+        {
+          "id": "zhejiang-8a-2-1",
+          "title": "等腰三角形",
+          "level": 2,
+          "children": [
+            {
+              "id": "zhejiang-8a-2-1-1",
+              "title": "等腰三角形的性质",
+              "level": 3
+            },
+            {
+              "id": "zhejiang-8a-2-1-2",
+              "title": "等腰三角形的判定",
+              "level": 3
+            }
+          ]
+        },
+        {
+          "id": "zhejiang-8a-2-2",
+          "title": "直角三角形",
+          "level": 2,
+          "children": [
+            {
+              "id": "zhejiang-8a-2-2-1",
+              "title": "勾股定理",
+              "level": 3
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

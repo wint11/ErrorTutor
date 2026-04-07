@@ -1,33 +1,53 @@
 import axios from 'axios'
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || '/api'
 
-if (!API_BASE_URL) {
-  throw new Error('NEXT_PUBLIC_API_URL environment variable is not set')
+function getStoredToken() {
+  if (typeof window === 'undefined') {
+    return null
+  }
+
+  const persistedState = localStorage.getItem('user-storage')
+
+  if (!persistedState) {
+    return null
+  }
+
+  try {
+    const parsed = JSON.parse(persistedState)
+    return parsed.state?.token || null
+  } catch {
+    return null
+  }
+}
+
+function isAuthRequest(url?: string) {
+  return url === '/auth/login' || url === '/auth/register'
 }
 
 export const api = axios.create({
   baseURL: API_BASE_URL,
+  withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
   },
 })
 
-// 请求拦截器添加 token
 api.interceptors.request.use((config) => {
-  if (typeof window !== 'undefined') {
-    const token = localStorage.getItem('user-storage')
-    if (token) {
-      try {
-        const parsed = JSON.parse(token)
-        if (parsed.state?.token) {
-          config.headers.Authorization = `Bearer ${parsed.state.token}`
-        }
-      } catch (e) {
-        // ignore parse error
-      }
+  if (isAuthRequest(config.url)) {
+    if (config.headers?.Authorization) {
+      delete config.headers.Authorization
     }
+
+    return config
   }
+
+  const token = getStoredToken()
+
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`
+  }
+
   return config
 })
 
@@ -35,18 +55,35 @@ api.interceptors.request.use((config) => {
 export const authApi = {
   login: (username: string, password: string) =>
     api.post('/auth/login', { username, password }),
-  register: (username: string, password: string, grade?: string, level?: string) =>
-    api.post('/auth/register', { username, password, grade, level }),
+  register: (username: string, password: string, grade?: string, level?: string, textbookVersion?: string) =>
+    api.post('/auth/register', { username, password, grade, level, textbookVersion }),
   getProfile: () => api.get('/auth/profile'),
+  updateProfile: (data: { grade?: string; level?: string; textbookVersion?: string }) =>
+    api.put('/auth/profile', data),
+  generatePortrait: () => api.post('/auth/profile/portrait'),
 }
 
 // 辅导相关
 export const tutoringApi = {
-  createSession: (problemText: string, mode?: string, timeLimit?: number) =>
-    api.post('/tutoring/sessions', { problemText, mode, timeLimit }),
+  createSession: (problemText: string, mode?: string, timeLimit?: number, difficulty?: string, groupId?: string, questionCount?: number, topic?: string, mistakeText?: string) =>
+    api.post('/tutoring/sessions', { problemText, mode, timeLimit, difficulty, groupId, questionCount, topic, mistakeText }),
   getSession: (sessionId: string) => api.get(`/tutoring/sessions/${sessionId}`),
-  sendMessage: (sessionId: string, text: string) =>
-    api.post(`/tutoring/sessions/${sessionId}/messages`, { text }),
+  getGroupSessions: (groupId: string) => api.get(`/tutoring/groups/${groupId}/sessions`),
+  startSession: (sessionId: string) => api.post(`/tutoring/sessions/${sessionId}/start`),
+  sendMessage: (sessionId: string, text: string) => {
+    // Return fetch directly since axios doesn't natively support streaming well
+    const token = getStoredToken()
+    return fetch(`${API_BASE_URL}/tutoring/sessions/${sessionId}/messages`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+      },
+      body: JSON.stringify({ text })
+    })
+  },
+  generateProblem: (data: { type: 'challenge' | 'practice', topic?: string, mode?: string, difficulty?: string, mistakeText?: string }) => 
+    api.post('/tutoring/generate-problem', data),
   getMessages: (sessionId: string) => api.get(`/tutoring/sessions/${sessionId}/messages`),
   getHistory: () => api.get('/tutoring/history'),
   getRecommend: () => api.get('/tutoring/recommend'),

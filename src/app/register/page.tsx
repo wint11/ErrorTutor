@@ -19,7 +19,8 @@ export default function Register() {
         values.username,
         values.password,
         values.grade,
-        values.level
+        values.level,
+        values.textbookVersion
       )
       message.success('注册成功，请登录')
       router.push('/login')
@@ -98,12 +99,24 @@ export default function Register() {
                 rules={[{ required: true, message: '请选择学段' }]}
               >
                 <Select size="large" placeholder="选择学段">
-                  <Option value="初一">初一</Option>
-                  <Option value="初二">初二</Option>
-                  <Option value="初三">初三</Option>
-                  <Option value="高一">高一</Option>
-                  <Option value="高二">高二</Option>
-                  <Option value="高三">高三</Option>
+                  <Option value="初一上">初一上</Option>
+                  <Option value="初一下">初一下</Option>
+                  <Option value="初二上">初二上</Option>
+                  <Option value="初二下">初二下</Option>
+                  <Option value="初三上">初三上</Option>
+                  <Option value="初三下">初三下</Option>
+                </Select>
+              </Form.Item>
+
+              <Form.Item
+                label="教材版本"
+                name="textbookVersion"
+                rules={[{ required: true, message: '请选择教材版本' }]}
+                initialValue="人教版"
+              >
+                <Select size="large" placeholder="选择教材版本">
+                  <Option value="人教版">人教版</Option>
+                  <Option value="浙教版">浙教版</Option>
                 </Select>
               </Form.Item>
 
@@ -111,6 +124,7 @@ export default function Register() {
                 label="数学自评学力"
                 name="level"
                 rules={[{ required: true, message: '请选择学力' }]}
+                className="col-span-2"
               >
                 <Select size="large" placeholder="选择学力水平">
                   <Option value="基础">基础薄弱</Option>

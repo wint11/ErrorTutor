@@ -18,10 +18,6 @@ export default function Login() {
       const res: any = await authApi.login(values.username, values.password)
       setToken(res.data.token)
       setUsername(res.data.username)
-      
-      // 同时设置 cookie 供 middleware 使用
-      document.cookie = `token=${res.data.token}; path=/; max-age=86400`
-      
       message.success('登录成功')
       router.push('/dashboard')
     } catch (error: any) {

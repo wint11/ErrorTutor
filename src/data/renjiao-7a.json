@@ -1,0 +1,68 @@
+{
+  "version": "人教版",
+  "grade": "初一上",
+  "nodes": [
+    {
+      "id": "renjiao-7a-1",
+      "chapter": "第一章 有理数",
+      "title": "有理数",
+      "level": 1,
+      "children": [
+        {
+          "id": "renjiao-7a-1-1",
+          "title": "正数和负数",
+          "level": 2,
+          "children": []
+        },
+        {
+          "id": "renjiao-7a-1-2",
+          "title": "有理数的加减法",
+          "level": 2,
+          "children": [
+            {
+              "id": "renjiao-7a-1-2-1",
+              "title": "有理数的加法法则",
+              "level": 3
+            },
+            {
+              "id": "renjiao-7a-1-2-2",
+              "title": "有理数的减法法则",
+              "level": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "renjiao-7a-2",
+      "chapter": "第三章 一元一次方程",
+      "title": "一元一次方程",
+      "level": 1,
+      "children": [
+        {
+          "id": "renjiao-7a-2-1",
+          "title": "从算式到方程",
+          "level": 2,
+          "children": []
+        },
+        {
+          "id": "renjiao-7a-2-2",
+          "title": "解一元一次方程",
+          "level": 2,
+          "children": [
+            {
+              "id": "renjiao-7a-2-2-1",
+              "title": "合并同类项与移项",
+              "level": 3
+            },
+            {
+              "id": "renjiao-7a-2-2-2",
+              "title": "去括号与去分母",
+              "level": 3
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

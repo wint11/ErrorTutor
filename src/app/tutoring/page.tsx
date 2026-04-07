@@ -1,13 +1,14 @@
 'use client'
 
 import React, { useState, useEffect, useRef } from 'react'
-import { Card, Input, Button, Steps, Typography, Tag, message, Radio, Space, Slider, Switch } from 'antd'
+import { Card, Input, Button, Steps, Typography, Tag, message, Radio, Space, Slider, Switch, Select, Spin, Empty } from 'antd'
 import { RobotOutlined, SendOutlined, AimOutlined, BulbOutlined, HistoryOutlined, SettingOutlined } from '@ant-design/icons'
 import { useRouter } from 'next/navigation'
-import { tutoringApi } from '@/lib/api'
+import { tutoringApi, authApi } from '@/lib/api'
 
 const { Paragraph, Text } = Typography
 const { TextArea } = Input
+const { Option } = Select
 
 interface ChatMessage {
   id: string
@@ -17,11 +18,11 @@ interface ChatMessage {
 
 interface ProblemItem {
   id: string
-  problemText?: string
-  text?: string
-  status?: string
-  difficulty?: string
+  text: string
   knowledgePoint?: string
+  source?: string
+  errorRate?: number
+  createdAt?: string | Date
 }
 
 export default function Tutoring() {
@@ -40,8 +41,14 @@ export default function Tutoring() {
   const [chatInput, setChatInput] = useState('')
   const [chatHistory, setChatHistory] = useState<ChatMessage[]>([])
   
-  const [historyProblems, setHistoryProblems] = useState<ProblemItem[]>([])
-  const [recommendProblems, setRecommendProblems] = useState<ProblemItem[]>([])
+  // 新增模式特定状态
+  const [userProfile, setUserProfile] = useState<any>(null)
+  const [weakPoints, setWeakPoints] = useState<{nodeId: string, title: string, errorRate: number}[]>([])
+  const [mistakes, setMistakes] = useState<ProblemItem[]>([])
+  const [knowledgeTree, setKnowledgeTree] = useState<any[]>([])
+  const [selectedTopic, setSelectedTopic] = useState<string | undefined>(undefined)
+  const [selectedMistake, setSelectedMistake] = useState<ProblemItem | undefined>(undefined)
+  const [dataLoading, setDataLoading] = useState(false)
 
   const chatEndRef = useRef<HTMLDivElement>(null)
 
@@ -50,28 +57,120 @@ export default function Tutoring() {
   }, [chatHistory])
 
   useEffect(() => {
-    fetchProblemSources()
+    const initData = async () => {
+      setDataLoading(true)
+      try {
+        // 1. 获取用户信息
+        const profileRes: any = await authApi.getProfile()
+        const profile = profileRes.data
+        setUserProfile(profile)
+
+        const v = profile.textbookVersion === '浙教版' ? 'zhejiang' : 'renjiao'
+        const gMap: Record<string, string> = {
+          '初一上': '7a', '初一下': '7b',
+          '初二上': '8a', '初二下': '8b',
+          '初三上': '9a', '初三下': '9b'
+        }
+        const g = gMap[profile.grade] || '7a'
+
+        // 2. 并发获取知识图谱和推荐数据
+        const [treeRes, recRes] = await Promise.all([
+          fetch(`/api/knowledge/tree?version=${v}&grade=${g}`),
+          fetch('/api/tutoring/recommend')
+        ])
+
+        let validIds = new Set<string>()
+        let validTitles = new Set<string>()
+
+        if (treeRes.ok) {
+          const treeData = await treeRes.json()
+          setKnowledgeTree(treeData)
+          
+          // 展平节点，用于后续过滤
+          const getFlattenNodes = (nodes: any[]): {id: string, title: string}[] => {
+            let result: {id: string, title: string}[] = []
+            nodes.forEach(n => {
+              if (!n.children || n.children.length === 0) {
+                result.push({ id: n.id, title: n.title })
+              } else {
+                result = result.concat(getFlattenNodes(n.children))
+              }
+            })
+            return result
+          }
+          const flatNodes = getFlattenNodes(treeData)
+          validIds = new Set(flatNodes.map(n => n.id))
+          validTitles = new Set(flatNodes.map(n => n.title))
+        }
+
+        if (recRes.ok) {
+          const recData = await recRes.json()
+          
+          // 过滤薄弱点：只保留属于当前教材版本的节点
+          const rawWeakPoints = recData.weakPoints || []
+          const filteredWeakPoints = rawWeakPoints.filter((wp: any) => validIds.has(wp.nodeId))
+          setWeakPoints(filteredWeakPoints)
+
+          // 过滤错题：APP上传的通过学段过滤，线上练习的通过知识点名称匹配当前教材
+          const rawMistakes = recData.mistakes || []
+          const filteredMistakes = rawMistakes.filter((m: any) => {
+            if (m.source === 'upload') {
+              return m.grade === profile.grade
+            }
+            return m.knowledgePoint && validTitles.has(m.knowledgePoint)
+          })
+          setMistakes(filteredMistakes)
+        }
+      } catch (e) {
+        console.error('Init data failed', e)
+      } finally {
+        setDataLoading(false)
+      }
+    }
+    
+    initData()
   }, [])
 
-  const fetchProblemSources = async () => {
-    try {
-      // 简化处理，实际应该调用相应 API
-      setHistoryProblems([])
-      setRecommendProblems([])
-    } catch (error) {
-      console.error('加载题目来源失败', error)
-    }
-  }
-
   const handleStartTutoring = async () => {
+    if (mode === '查漏补缺' && !selectedTopic) {
+      return message.warning('请选择一个薄弱知识点')
+    }
+    if (mode === '错题复习' && !selectedMistake) {
+      return message.warning('请选择一道错题')
+    }
+    if (mode === '专项突破' && !selectedTopic) {
+      return message.warning('请选择一个知识点专题')
+    }
+
     setLoading(true)
     
-    // 根据用户选择的参数生成辅导提示语或模拟第一道题目
-    const totalMinutes = questionCount * (difficulty === '基础' ? 3 : difficulty === '中等' ? 5 : 8)
-    const initialProblemText = `根据您选择的【${mode}】模式，系统已为您生成 ${questionCount} 道【${difficulty}】难度的专属题目。${timeLimit ? `\n\n🕒 已开启限时挑战，倒计时 ${totalMinutes} 分钟，请注意时间！` : ''}\n\n请看第一题：\n一辆汽车从甲地开往乙地，若每小时行40千米，则迟到1小时；若每小时行50千米，则早到1小时。求甲乙两地的距离？`
-    
     try {
-      const res: any = await tutoringApi.createSession(initialProblemText, mode, timeLimit ? totalMinutes : undefined)
+      const totalMinutes = questionCount * (difficulty === '基础' ? 3 : difficulty === '中等' ? 5 : 8)
+      
+      // 动态生成第一道题目
+      const genRes: any = await tutoringApi.generateProblem({
+        type: 'practice',
+        mode,
+        difficulty,
+        topic: selectedTopic,
+        mistakeText: selectedMistake?.text
+      })
+      const generatedProblemText = genRes.data.problemText || '题目生成失败，请重试'
+      
+      const initialProblemText = `根据您选择的【${mode}】模式，系统已为您生成 ${questionCount} 道【${difficulty}】难度的专属题目。${timeLimit ? `\n\n🕒 已开启限时挑战，倒计时 ${totalMinutes} 分钟，请注意时间！` : ''}\n\n请看第一题：\n${generatedProblemText}`
+      
+      const groupId = Date.now().toString() + Math.random().toString(36).substr(2, 9)
+      
+      const res: any = await tutoringApi.createSession(
+        initialProblemText, 
+        mode, 
+        timeLimit ? totalMinutes : undefined, 
+        difficulty, 
+        groupId, 
+        questionCount,
+        selectedTopic,
+        selectedMistake?.text
+      )
       setSessionId(res.data.id)
       setProblemText(initialProblemText)
       setChatHistory(res.data.messages || [{
@@ -98,13 +197,50 @@ export default function Tutoring() {
     setChatHistory(prev => [...prev, tempUserMsg])
     setLoading(true)
 
+    // 创建一个占位的 AI 回复消息，后续流式更新其文本
+    const aiMsgId = (Date.now() + 1).toString()
+    setChatHistory(prev => [...prev, { id: aiMsgId, role: 'ai', text: '' }])
+
     try {
-      const res: any = await tutoringApi.sendMessage(sessionId, userText)
-      setChatHistory(prev => [...prev, res.data])
-      setCurrentStep(res.data.currentStep || currentStep)
+      const response = await tutoringApi.sendMessage(sessionId, userText)
+      
+      if (!response.body) {
+        throw new Error('流数据不可用')
+      }
+
+      const reader = response.body.getReader()
+      const decoder = new TextDecoder()
+      let aiText = ''
+
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+
+        const chunk = decoder.decode(value, { stream: true })
+        const lines = chunk.split('\n')
+
+        for (const line of lines) {
+          if (!line) continue
+          try {
+            const data = JSON.parse(line)
+            if (data.type === 'text') {
+              aiText += data.content
+              setChatHistory(prev => prev.map(msg => 
+                msg.id === aiMsgId ? { ...msg, text: aiText } : msg
+              ))
+            } else if (data.type === 'meta') {
+              if (data.currentStep !== undefined) {
+                setCurrentStep(data.currentStep)
+              }
+            }
+          } catch (e) {
+            // ignore
+          }
+        }
+      }
     } catch (error: any) {
       message.error('发送失败，请重试')
-      setChatHistory(prev => prev.filter(msg => msg.id !== tempUserMsg.id))
+      setChatHistory(prev => prev.filter(msg => msg.id !== tempUserMsg.id && msg.id !== aiMsgId))
     } finally {
       setLoading(false)
     }
@@ -129,7 +265,11 @@ export default function Tutoring() {
             {modes.map((m) => (
               <div
                 key={m.value}
-                onClick={() => setMode(m.value)}
+                onClick={() => {
+                  setMode(m.value)
+                  setSelectedTopic(undefined)
+                  setSelectedMistake(undefined)
+                }}
                 className={`cursor-pointer p-4 rounded-xl border-2 transition-all duration-200 flex flex-col items-center justify-center flex-1 min-h-[100px] ${
                   mode === m.value
                     ? `${m.border} ${m.bg} shadow-md scale-[1.02] z-10`
@@ -151,6 +291,120 @@ export default function Tutoring() {
           </div>
           <div className="flex-grow flex flex-col p-6 overflow-hidden">
             <div className="flex-grow flex flex-col gap-8 pr-2 overflow-y-auto">
+              
+              {/* 模式专属配置 */}
+              <div className="h-[280px] flex-shrink-0">
+                {mode === '通用辅导' && (
+                  <div className="bg-blue-50/50 p-6 rounded-xl border border-blue-100 h-full flex flex-col justify-center items-center text-blue-600">
+                    <RobotOutlined className="text-5xl mb-4 opacity-50" />
+                    <p className="font-bold text-lg mb-2">通用辅导模式</p>
+                    <p className="text-sm opacity-80 text-center px-4">系统将根据您当前学段（{userProfile?.grade || '未设置'}）和教材（{userProfile?.textbookVersion || '未设置'}）随机选择核心知识点进行出题。</p>
+                  </div>
+                )}
+
+                {mode === '查漏补缺' && (
+                  <div className="bg-emerald-50/50 p-6 rounded-xl border border-emerald-100 h-full flex flex-col">
+                    <h3 className="text-base font-bold text-slate-800 mb-4 flex items-center flex-shrink-0">
+                      <AimOutlined className="text-emerald-500 mr-2" />
+                      选择薄弱知识点 <span className="text-xs text-emerald-600 font-normal ml-2 bg-emerald-100 px-2 py-0.5 rounded-full">{userProfile?.textbookVersion} {userProfile?.grade}</span>
+                    </h3>
+                    <div className="flex-grow overflow-y-auto">
+                      {dataLoading ? <div className="flex justify-center items-center h-full"><Spin /></div> : weakPoints.length > 0 ? (
+                        <Select 
+                          className="w-full" 
+                          size="large" 
+                          placeholder="请选择你的薄弱知识点"
+                          value={selectedTopic}
+                          onChange={setSelectedTopic}
+                        >
+                          {weakPoints.map(wp => (
+                            <Option key={wp.nodeId} value={wp.title}>
+                              {wp.title} <span className="text-red-500 text-xs ml-2">错题率 {(wp.errorRate).toFixed(1)}%</span>
+                            </Option>
+                          ))}
+                        </Select>
+                      ) : (
+                        <div className="h-full flex items-center justify-center">
+                          <Empty description="太棒了，你暂时没有薄弱知识点" image={Empty.PRESENTED_IMAGE_SIMPLE} />
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {mode === '错题复习' && (
+                  <div className="bg-rose-50/50 p-6 rounded-xl border border-rose-100 h-full flex flex-col">
+                    <h3 className="text-base font-bold text-slate-800 mb-4 flex items-center flex-shrink-0">
+                      <HistoryOutlined className="text-rose-500 mr-2" />
+                      选择错题 <span className="text-xs text-rose-600 font-normal ml-2 bg-rose-100 px-2 py-0.5 rounded-full">{userProfile?.textbookVersion} {userProfile?.grade}</span>
+                    </h3>
+                    <div className="flex-grow overflow-y-auto pr-2">
+                      {dataLoading ? <div className="flex justify-center items-center h-full"><Spin /></div> : mistakes.length > 0 ? (
+                        <div className="flex flex-col gap-2">
+                          {mistakes.map((item) => (
+                            <div
+                              key={item.id}
+                              className={`cursor-pointer rounded-lg p-3 border transition-colors ${selectedMistake?.id === item.id ? 'border-rose-500 bg-rose-50' : 'border-slate-200 bg-white hover:border-rose-300'}`}
+                              onClick={() => setSelectedMistake(item)}
+                            >
+                              <div className="flex flex-col w-full">
+                                <div className="text-sm text-slate-800 line-clamp-2 mb-2">{item.text}</div>
+                                <div className="flex justify-between items-center text-xs text-slate-400">
+                                  <span>{new Date(item.createdAt || Date.now()).toLocaleDateString()}</span>
+                                  <Tag color={item.source === 'online' ? 'blue' : 'purple'}>{item.source === 'online' ? '线上练习' : '自主上传'}</Tag>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="h-full flex items-center justify-center">
+                          <Empty description="错题本为空" image={Empty.PRESENTED_IMAGE_SIMPLE} />
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {mode === '专项突破' && (
+                  <div className="bg-amber-50/50 p-6 rounded-xl border border-amber-100 h-full flex flex-col">
+                    <h3 className="text-base font-bold text-slate-800 mb-4 flex items-center flex-shrink-0">
+                      <BulbOutlined className="text-amber-500 mr-2" />
+                      选择知识点专题 <span className="text-xs text-amber-600 font-normal ml-2 bg-amber-100 px-2 py-0.5 rounded-full">{userProfile?.textbookVersion} {userProfile?.grade}</span>
+                    </h3>
+                    <div className="flex-grow overflow-y-auto">
+                      {dataLoading ? <div className="flex justify-center items-center h-full"><Spin /></div> : (
+                        <Select 
+                          className="w-full" 
+                          size="large" 
+                          placeholder="请选择知识点"
+                          value={selectedTopic}
+                          onChange={setSelectedTopic}
+                          showSearch
+                          filterOption={(input, option) =>
+                            (option?.label ?? '').toString().toLowerCase().includes(input.toLowerCase())
+                          }
+                          options={(() => {
+                            const flattenNodes = (nodes: any[], prefix = ''): {label: string, value: string}[] => {
+                              let result: {label: string, value: string}[] = []
+                              nodes.forEach(n => {
+                                const name = prefix ? `${prefix} - ${n.title}` : n.title
+                                if (!n.children || n.children.length === 0) {
+                                  result.push({ label: name, value: n.title })
+                                } else {
+                                  result = result.concat(flattenNodes(n.children, name))
+                                }
+                              })
+                              return result
+                            }
+                            return flattenNodes(knowledgeTree)
+                          })()}
+                        />
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
               
               {/* 参数1：练习题量 */}
               <div className="bg-slate-50 p-6 rounded-xl border border-slate-100">
@@ -265,13 +519,13 @@ export default function Tutoring() {
           </div>
           <div className="p-6 flex-grow overflow-y-auto">
             <Steps
-              direction="vertical"
+              orientation="vertical"
               current={currentStep}
               items={[
-                { title: '理解题意', description: '提取已知条件和所求' },
-                { title: '知识点映射', description: '关联核心数学概念' },
-                { title: '逻辑建模', description: '寻找等量关系' },
-                { title: '求解验算', description: '计算过程' },
+                { title: '理解题意', content: '提取已知条件和所求' },
+                { title: '知识点映射', content: '关联核心数学概念' },
+                { title: '逻辑建模', content: '寻找等量关系' },
+                { title: '求解验算', content: '计算过程' },
               ]}
             />
           </div>

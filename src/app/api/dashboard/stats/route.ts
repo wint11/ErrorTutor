@@ -1,23 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
-import { verifyToken } from '@/lib/auth'
+import { getAuthPayload } from '@/lib/auth'
 
 export async function GET(request: NextRequest) {
   try {
-    const authHeader = request.headers.get('authorization')
-    const token = authHeader?.replace('Bearer ', '')
-
-    if (!token) {
-      return NextResponse.json(
-        { error: '未授权' },
-        { status: 401 }
-      )
-    }
-
-    const payload = verifyToken(token)
+    const payload = getAuthPayload(request)
     if (!payload) {
       return NextResponse.json(
-        { error: '无效的令牌' },
+        { error: '未授权或令牌无效' },
         { status: 401 }
       )
     }
@@ -41,7 +31,8 @@ export async function GET(request: NextRequest) {
       resolvedCount, 
       eliminatedCount, 
       todaySessions,
-      allSessions
+      allSessions,
+      challengeSession
     ] = await Promise.all([
       prisma.tutoringSession.count({
         where: { userId, status: 'COMPLETED' }
@@ -59,11 +50,11 @@ export async function GET(request: NextRequest) {
           }
         },
         orderBy: { createdAt: 'desc' },
-        take: 3,
         select: {
           id: true,
           problemText: true,
           status: true,
+          mode: true,
           createdAt: true
         }
       }),
@@ -72,6 +63,23 @@ export async function GET(request: NextRequest) {
         where: { userId },
         select: { createdAt: true, updatedAt: true },
         orderBy: { createdAt: 'desc' }
+      }),
+      // 获取今天最新的强化练习状态
+      prisma.tutoringSession.findFirst({
+        where: {
+          userId,
+          mode: '专项突破',
+          createdAt: {
+            gte: today,
+            lt: tomorrow
+          }
+        },
+        orderBy: { createdAt: 'desc' },
+        select: {
+          id: true,
+          status: true,
+          topic: true
+        }
       })
     ])
 
@@ -130,7 +138,8 @@ export async function GET(request: NextRequest) {
       mostFrequentError: errorTypes[0]?.errorType || '暂无数据',
       todayStudyMinutes,
       streakDays,
-      todaySessions
+      todaySessions,
+      challengeSession
     })
   } catch (error) {
     console.error('Dashboard stats error:', error)

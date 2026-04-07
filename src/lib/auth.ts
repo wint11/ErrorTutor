@@ -1,5 +1,6 @@
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
+import type { NextRequest } from 'next/server'
 
 const JWT_SECRET = process.env.JWT_SECRET || 'supersecretkey_errortutor'
 
@@ -21,4 +22,26 @@ export function verifyToken(token: string): { userId: string; username: string }
   } catch {
     return null
   }
+}
+
+export function getRequestToken(request: NextRequest): string | null {
+  const authHeader = request.headers.get('authorization')
+  const bearerToken = authHeader?.replace(/^Bearer\s+/i, '').trim()
+
+  if (bearerToken) {
+    return bearerToken
+  }
+
+  const cookieToken = request.cookies.get('token')?.value?.trim()
+  return cookieToken || null
+}
+
+export function getAuthPayload(request: NextRequest) {
+  const token = getRequestToken(request)
+
+  if (!token) {
+    return null
+  }
+
+  return verifyToken(token)
 }
