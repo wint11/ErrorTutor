@@ -1,0 +1,856 @@
+{
+    "openapi": "3.1.0",
+    "info": {
+        "title": "RAG API Service",
+        "description": "医学文献 RAG 检索增强生成服务接口",
+        "version": "1.0.0"
+    },
+    "paths": {
+        "/embed": {
+            "post": {
+                "summary": "Embed And Store",
+                "description": "统一 Embedding 接口: 调用 vLLM 获取向量，并存入 ChromaDB",
+                "operationId": "embed_and_store_embed_post",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/EmbeddingRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/EmbeddingResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "HTTPBearer": []
+                    }
+                ]
+            }
+        },
+        "/search": {
+            "post": {
+                "summary": "Search",
+                "description": "RAG 检索接口:\n1. 将 query 转化为 embedding 向量\n2. 从 ChromaDB 检索 top_k 个相似文档\n3. 直接返回召回结果",
+                "operationId": "search_search_post",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/SearchRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SearchResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "HTTPBearer": []
+                    }
+                ]
+            }
+        },
+        "/generate": {
+            "post": {
+                "summary": "Generate",
+                "description": "RAG 对话接口:\n1. 检索相关文档\n2. 构建 Prompt 发送给 Generate LLM",
+                "operationId": "generate_generate_post",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/GenerateRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "SSE 流式返回，可能包含 is_context 或 choices 数据",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/GenerateResponse"
+                                }
+                            },
+                            "text/event-stream": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/GenerateResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "HTTPBearer": []
+                    }
+                ]
+            }
+        },
+        "/chunks": {
+            "get": {
+                "summary": "Get All Chunks",
+                "description": "获取知识库内容 (支持分页)",
+                "operationId": "get_all_chunks_chunks_get",
+                "security": [
+                    {
+                        "HTTPBearer": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 1,
+                            "title": "Page"
+                        }
+                    },
+                    {
+                        "name": "page_size",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 50,
+                            "title": "Page Size"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ChunksResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "summary": "Delete Chunks",
+                "description": "删除知识库中指定的 chunks",
+                "operationId": "delete_chunks_chunks_delete",
+                "security": [
+                    {
+                        "HTTPBearer": []
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/DeleteRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/DeleteResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/chunks/all": {
+            "delete": {
+                "summary": "Clear All Chunks",
+                "description": "彻底清空整个知识库集合",
+                "operationId": "clear_all_chunks_chunks_all_delete",
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/BasicResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "HTTPBearer": []
+                    }
+                ]
+            }
+        },
+        "/optimize": {
+            "post": {
+                "summary": "Optimize Chunk",
+                "description": "使用大模型优化 Chunk 内容",
+                "operationId": "optimize_chunk_optimize_post",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/OptimizeRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/OptimizeResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "HTTPBearer": []
+                    }
+                ]
+            }
+        },
+        "/upload_pdf": {
+            "post": {
+                "summary": "上传并解析 PDF",
+                "description": "接收前端上传的 PDF 文件，在服务端进行解析和切分，返回 Chunks 数组",
+                "operationId": "upload_and_process_pdf_upload_pdf_post",
+                "requestBody": {
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Body_upload_and_process_pdf_upload_pdf_post"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/UploadPdfResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "HTTPBearer": []
+                    }
+                ]
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "BasicResponse": {
+                "properties": {
+                    "status": {
+                        "type": "string",
+                        "title": "Status"
+                    },
+                    "message": {
+                        "type": "string",
+                        "title": "Message"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "status",
+                    "message"
+                ],
+                "title": "BasicResponse"
+            },
+            "Body_upload_and_process_pdf_upload_pdf_post": {
+                "properties": {
+                    "file": {
+                        "type": "string",
+                        "format": "binary",
+                        "contentMediaType": "application/octet-stream",
+                        "title": "File",
+                        "description": "要上传的 PDF 文件"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "file"
+                ],
+                "title": "Body_upload_and_process_pdf_upload_pdf_post"
+            },
+            "ChunkItem": {
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "title": "Id"
+                    },
+                    "document": {
+                        "type": "string",
+                        "title": "Document"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "id",
+                    "document"
+                ],
+                "title": "ChunkItem"
+            },
+            "ChunksResponse": {
+                "properties": {
+                    "status": {
+                        "type": "string",
+                        "title": "Status"
+                    },
+                    "total": {
+                        "type": "integer",
+                        "title": "Total"
+                    },
+                    "page": {
+                        "type": "integer",
+                        "title": "Page"
+                    },
+                    "page_size": {
+                        "type": "integer",
+                        "title": "Page Size"
+                    },
+                    "chunks": {
+                        "items": {
+                            "$ref": "#/components/schemas/ChunkItem"
+                        },
+                        "type": "array",
+                        "title": "Chunks"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "status",
+                    "total",
+                    "page",
+                    "page_size",
+                    "chunks"
+                ],
+                "title": "ChunksResponse"
+            },
+            "DeleteRequest": {
+                "properties": {
+                    "ids": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array",
+                        "title": "Ids",
+                        "description": "要删除的文档 ID 列表"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "ids"
+                ],
+                "title": "DeleteRequest"
+            },
+            "DeleteResponse": {
+                "properties": {
+                    "status": {
+                        "type": "string",
+                        "title": "Status"
+                    },
+                    "deleted_count": {
+                        "type": "integer",
+                        "title": "Deleted Count"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "status",
+                    "deleted_count"
+                ],
+                "title": "DeleteResponse"
+            },
+            "EmbeddingRequest": {
+                "properties": {
+                    "input": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "items": {
+                                    "type": "string"
+                                },
+                                "type": "array"
+                            }
+                        ],
+                        "title": "Input",
+                        "description": "需要进行 embedding 并存入库的文本或文本列表"
+                    },
+                    "metadatas": {
+                        "anyOf": [
+                            {
+                                "additionalProperties": true,
+                                "type": "object"
+                            },
+                            {
+                                "items": {
+                                    "additionalProperties": true,
+                                    "type": "object"
+                                },
+                                "type": "array"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Metadatas",
+                        "description": "可选的元数据（如来源文件名）"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "input"
+                ],
+                "title": "EmbeddingRequest"
+            },
+            "EmbeddingResponse": {
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "title": "Id"
+                    },
+                    "object": {
+                        "type": "string",
+                        "title": "Object"
+                    },
+                    "created": {
+                        "type": "integer",
+                        "title": "Created"
+                    },
+                    "model": {
+                        "type": "string",
+                        "title": "Model"
+                    },
+                    "data": {
+                        "items": {
+                            "additionalProperties": true,
+                            "type": "object"
+                        },
+                        "type": "array",
+                        "title": "Data"
+                    },
+                    "usage": {
+                        "additionalProperties": true,
+                        "type": "object",
+                        "title": "Usage"
+                    },
+                    "chroma_ids": {
+                        "anyOf": [
+                            {
+                                "items": {
+                                    "type": "string"
+                                },
+                                "type": "array"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Chroma Ids",
+                        "description": "存入 ChromaDB 后的 ID 列表"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "id",
+                    "object",
+                    "created",
+                    "model",
+                    "data",
+                    "usage"
+                ],
+                "title": "EmbeddingResponse"
+            },
+            "GenerateRequest": {
+                "properties": {
+                    "question": {
+                        "type": "string",
+                        "title": "Question",
+                        "description": "用户问题"
+                    },
+                    "type": {
+                        "type": "string",
+                        "title": "Type",
+                        "description": "业务类型",
+                        "default": "order_teaching"
+                    },
+                    "top_k": {
+                        "type": "integer",
+                        "title": "Top K",
+                        "description": "向量检索召回的数量",
+                        "default": 5
+                    },
+                    "use_kb": {
+                        "type": "boolean",
+                        "title": "Use Kb",
+                        "description": "是否进行知识库检索",
+                        "default": true
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "question"
+                ],
+                "title": "GenerateRequest"
+            },
+            "GenerateResponse": {
+                "properties": {
+                    "is_context": {
+                        "anyOf": [
+                            {
+                                "type": "boolean"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Is Context",
+                        "description": "是否是检索的上下文信息",
+                        "default": false
+                    },
+                    "docs": {
+                        "anyOf": [
+                            {
+                                "items": {
+                                    "additionalProperties": true,
+                                    "type": "object"
+                                },
+                                "type": "array"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Docs",
+                        "description": "检索到的文档列表"
+                    },
+                    "choices": {
+                        "anyOf": [
+                            {
+                                "items": {
+                                    "additionalProperties": true,
+                                    "type": "object"
+                                },
+                                "type": "array"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Choices",
+                        "description": "大模型返回的回答片段"
+                    }
+                },
+                "type": "object",
+                "title": "GenerateResponse"
+            },
+            "HTTPValidationError": {
+                "properties": {
+                    "detail": {
+                        "items": {
+                            "$ref": "#/components/schemas/ValidationError"
+                        },
+                        "type": "array",
+                        "title": "Detail"
+                    }
+                },
+                "type": "object",
+                "title": "HTTPValidationError"
+            },
+            "OptimizeRequest": {
+                "properties": {
+                    "text": {
+                        "type": "string",
+                        "title": "Text",
+                        "description": "需要优化的文本块内容"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "text"
+                ],
+                "title": "OptimizeRequest"
+            },
+            "OptimizeResponse": {
+                "properties": {
+                    "status": {
+                        "type": "string",
+                        "title": "Status"
+                    },
+                    "optimized_text": {
+                        "type": "string",
+                        "title": "Optimized Text"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "status",
+                    "optimized_text"
+                ],
+                "title": "OptimizeResponse"
+            },
+            "SearchRequest": {
+                "properties": {
+                    "query": {
+                        "type": "string",
+                        "title": "Query",
+                        "description": "检索用的查询字符串"
+                    },
+                    "top_k": {
+                        "type": "integer",
+                        "title": "Top K",
+                        "description": "向量检索召回的数量",
+                        "default": 5
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "query"
+                ],
+                "title": "SearchRequest"
+            },
+            "SearchResponse": {
+                "properties": {
+                    "status": {
+                        "type": "string",
+                        "title": "Status"
+                    },
+                    "query": {
+                        "type": "string",
+                        "title": "Query"
+                    },
+                    "results": {
+                        "items": {
+                            "$ref": "#/components/schemas/SearchResultItem"
+                        },
+                        "type": "array",
+                        "title": "Results"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "status",
+                    "query",
+                    "results"
+                ],
+                "title": "SearchResponse"
+            },
+            "SearchResultItem": {
+                "properties": {
+                    "document": {
+                        "type": "string",
+                        "title": "Document"
+                    },
+                    "score": {
+                        "type": "number",
+                        "title": "Score"
+                    },
+                    "metadata": {
+                        "additionalProperties": true,
+                        "type": "object",
+                        "title": "Metadata"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "document",
+                    "score",
+                    "metadata"
+                ],
+                "title": "SearchResultItem"
+            },
+            "UploadPdfResponse": {
+                "properties": {
+                    "status": {
+                        "type": "string",
+                        "title": "Status"
+                    },
+                    "filename": {
+                        "type": "string",
+                        "title": "Filename"
+                    },
+                    "chunks": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array",
+                        "title": "Chunks"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "status",
+                    "filename",
+                    "chunks"
+                ],
+                "title": "UploadPdfResponse"
+            },
+            "ValidationError": {
+                "properties": {
+                    "loc": {
+                        "items": {
+                            "anyOf": [
+                                {
+                                    "type": "string"
+                                },
+                                {
+                                    "type": "integer"
+                                }
+                            ]
+                        },
+                        "type": "array",
+                        "title": "Location"
+                    },
+                    "msg": {
+                        "type": "string",
+                        "title": "Message"
+                    },
+                    "type": {
+                        "type": "string",
+                        "title": "Error Type"
+                    },
+                    "input": {
+                        "title": "Input"
+                    },
+                    "ctx": {
+                        "type": "object",
+                        "title": "Context"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "loc",
+                    "msg",
+                    "type"
+                ],
+                "title": "ValidationError"
+            }
+        },
+        "securitySchemes": {
+            "HTTPBearer": {
+                "type": "http",
+                "scheme": "bearer"
+            }
+        }
+    }
+}
