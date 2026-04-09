@@ -14,6 +14,11 @@ model User {
   grade     String?
   level     String?
   textbookVersion String? @default("人教版")
+  role            String   @default("STUDENT") // 可以是 "STUDENT" 或 "TEACHER"
+  requirePasswordChange Boolean @default(false)
+  classId         String?  // 如果是学生，可以归属一个班级
+  class           Class?   @relation("StudentClass", fields: [classId], references: [id])
+  createdClasses  Class[]  @relation("TeacherClasses")
   aiPortrait      String?
   aiPortraitUpdatedAt DateTime?
   createdAt DateTime @default(now())
@@ -23,6 +28,42 @@ model User {
   mistakes         MistakeRecord[]
   appUploads       AppUpload[]
   masteredNodes    UserMasteredNode[]
+  exerciseSubmissions ExerciseSubmission[]
+}
+
+model Class {
+  id        String   @id @default(uuid())
+  name      String
+  teacherId String
+  teacher   User     @relation("TeacherClasses", fields: [teacherId], references: [id])
+  students  User[]   @relation("StudentClass")
+  exercises Exercise[]
+  createdAt DateTime @default(now())
+}
+
+model Exercise {
+  id             String   @id @default(uuid())
+  title          String
+  content        String
+  knowledgePoint String?  // 绑定的知识点
+  classId        String
+  class          Class    @relation(fields: [classId], references: [id])
+  dueDate        DateTime?
+  createdAt      DateTime @default(now())
+  
+  submissions ExerciseSubmission[]
+}
+
+model ExerciseSubmission {
+  id             String   @id @default(uuid())
+  exerciseId     String
+  exercise       Exercise @relation(fields: [exerciseId], references: [id])
+  studentId      String
+  student        User     @relation(fields: [studentId], references: [id])
+  content        String?  // 学生的作答内容
+  isCorrect      Boolean  @default(false)
+  mistakeSummary String?  // AI 生成的错误总结，用于交叉练习
+  createdAt      DateTime @default(now())
 }
 
 model UserMasteredNode {
@@ -53,6 +94,7 @@ model TutoringSession {
   status         String   @default("IN_PROGRESS") // 可以是 PENDING, IN_PROGRESS, COMPLETED
   currentStep    Int      @default(0)
   timeLimit      Int?     // 限时挑战的时间（分钟），如果不限时则为 null
+  exerciseId     String?  // 关联的班级练习任务 ID（如果有）
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 

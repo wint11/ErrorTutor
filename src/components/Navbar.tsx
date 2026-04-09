@@ -4,21 +4,29 @@ import React, { useState } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { Button, Menu, Avatar, Dropdown, Drawer } from 'antd'
-import { UserOutlined, LogoutOutlined, MenuOutlined, AppstoreOutlined, RobotOutlined, LineChartOutlined, BookOutlined } from '@ant-design/icons'
+import { UserOutlined, LogoutOutlined, MenuOutlined, AppstoreOutlined, RobotOutlined, LineChartOutlined, BookOutlined, TeamOutlined, FileTextOutlined } from '@ant-design/icons'
 import { useUserStore } from '@/store/userStore'
 
-const menuItems = [
+const studentMenuItems = [
   { key: '/dashboard', label: '学习中心', icon: <AppstoreOutlined /> },
   { key: '/tutoring', label: '智能辅导', icon: <RobotOutlined /> },
   { key: '/growth', label: '成长轨迹', icon: <LineChartOutlined /> },
   { key: '/knowledge', label: '知识图谱', icon: <BookOutlined /> },
 ]
 
+const teacherMenuItems = [
+  { key: '/teacher/dashboard', label: '教师控制台', icon: <AppstoreOutlined /> },
+  { key: '/teacher/students', label: '班级与学生管理', icon: <TeamOutlined /> },
+  { key: '/teacher/exercises', label: '练习管理', icon: <FileTextOutlined /> },
+]
+
 export default function Navbar() {
-  const { token, username, logout } = useUserStore()
+  const { token, username, role, logout } = useUserStore()
   const router = useRouter()
   const pathname = usePathname()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+
+  const menuItems = role === 'TEACHER' ? teacherMenuItems : studentMenuItems
 
   const handleLogout = () => {
     logout()
@@ -27,7 +35,7 @@ export default function Navbar() {
     router.push('/login')
   }
 
-  const selectedKey = menuItems.find(item => pathname?.startsWith(item.key))?.key || '/dashboard'
+  const selectedKey = menuItems.find(item => pathname?.startsWith(item.key))?.key || (role === 'TEACHER' ? '/teacher/dashboard' : '/dashboard')
 
   const userMenu = {
     items: [

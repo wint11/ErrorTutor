@@ -55,18 +55,18 @@ api.interceptors.request.use((config) => {
 export const authApi = {
   login: (username: string, password: string) =>
     api.post('/auth/login', { username, password }),
-  register: (username: string, password: string, grade?: string, level?: string, textbookVersion?: string) =>
-    api.post('/auth/register', { username, password, grade, level, textbookVersion }),
+  register: (username: string, password: string, grade?: string, level?: string, textbookVersion?: string, role?: string) =>
+    api.post('/auth/register', { username, password, grade, level, textbookVersion, role }),
   getProfile: () => api.get('/auth/profile'),
-  updateProfile: (data: { grade?: string; level?: string; textbookVersion?: string }) =>
+  updateProfile: (data: { grade?: string; level?: string; textbookVersion?: string; password?: string }) =>
     api.put('/auth/profile', data),
   generatePortrait: () => api.post('/auth/profile/portrait'),
 }
 
 // 辅导相关
 export const tutoringApi = {
-  createSession: (problemText: string, mode?: string, timeLimit?: number, difficulty?: string, groupId?: string, questionCount?: number, topic?: string, mistakeText?: string) =>
-    api.post('/tutoring/sessions', { problemText, mode, timeLimit, difficulty, groupId, questionCount, topic, mistakeText }),
+  createSession: (problemText: string, mode?: string, timeLimit?: number, difficulty?: string, groupId?: string, questionCount?: number, topic?: string, mistakeText?: string, knowledgePoint?: string, exerciseId?: string) =>
+    api.post('/tutoring/sessions', { problemText, mode, timeLimit, difficulty, groupId, questionCount, topic, mistakeText, knowledgePoint, exerciseId }),
   getSession: (sessionId: string) => api.get(`/tutoring/sessions/${sessionId}`),
   getGroupSessions: (groupId: string) => api.get(`/tutoring/groups/${groupId}/sessions`),
   startSession: (sessionId: string) => api.post(`/tutoring/sessions/${sessionId}/start`),
@@ -98,4 +98,20 @@ export const growthApi = {
 // 仪表盘
 export const dashboardApi = {
   getStats: () => api.get('/dashboard/stats'),
+  getExercises: () => api.get('/dashboard/exercises'),
+}
+
+// 教师端相关
+export const teacherApi = {
+  getDashboardStats: () => api.get('/teacher/dashboard/stats'),
+  getClasses: () => api.get('/teacher/classes'),
+  createClass: (name: string) => api.post('/teacher/classes', { name }),
+  updateClass: (id: string, name: string) => api.put('/teacher/classes', { id, name }),
+  deleteClass: (id: string) => api.delete(`/teacher/classes?id=${id}`),
+  getStudents: (classId?: string) => api.get('/teacher/students', { params: { classId } }),
+  batchCreateStudents: (data: { classId: string, count: number, grade?: string, level?: string, textbookVersion?: string }) => api.post('/teacher/students', data),
+  updateStudent: (studentId: string, data: { username?: string, password?: string, classId?: string }) => api.put('/teacher/students', { studentId, ...data }),
+  deleteStudent: (studentId: string) => api.delete('/teacher/students', { data: { studentId } }),
+  getExercises: () => api.get('/teacher/exercises'),
+  createExercise: (data: any) => api.post('/teacher/exercises', data),
 }

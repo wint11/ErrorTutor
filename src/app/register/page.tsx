@@ -18,9 +18,10 @@ export default function Register() {
       await authApi.register(
         values.username,
         values.password,
-        values.grade,
-        values.level,
-        values.textbookVersion
+        values.role === 'TEACHER' ? undefined : values.grade,
+        values.role === 'TEACHER' ? undefined : values.level,
+        values.role === 'TEACHER' ? undefined : values.textbookVersion,
+        values.role
       )
       message.success('注册成功，请登录')
       router.push('/login')
@@ -50,7 +51,19 @@ export default function Register() {
           <Form
             layout="vertical"
             onFinish={onFinish}
+            initialValues={{ role: 'STUDENT', textbookVersion: '人教版' }}
           >
+            <Form.Item
+              label="角色"
+              name="role"
+              rules={[{ required: true, message: '请选择角色' }]}
+            >
+              <Select size="large" placeholder="选择角色">
+                <Option value="STUDENT">学生</Option>
+                <Option value="TEACHER">教师</Option>
+              </Select>
+            </Form.Item>
+
             <Form.Item
               label="用户名"
               name="username"
@@ -92,47 +105,52 @@ export default function Register() {
               <Input.Password size="large" placeholder="请再次输入密码" />
             </Form.Item>
 
-            <div className="grid grid-cols-2 gap-4">
-              <Form.Item
-                label="当前学段"
-                name="grade"
-                rules={[{ required: true, message: '请选择学段' }]}
-              >
-                <Select size="large" placeholder="选择学段">
-                  <Option value="初一上">初一上</Option>
-                  <Option value="初一下">初一下</Option>
-                  <Option value="初二上">初二上</Option>
-                  <Option value="初二下">初二下</Option>
-                  <Option value="初三上">初三上</Option>
-                  <Option value="初三下">初三下</Option>
-                </Select>
-              </Form.Item>
+            <Form.Item noStyle shouldUpdate={(prevValues, currentValues) => prevValues.role !== currentValues.role}>
+              {({ getFieldValue }) =>
+                getFieldValue('role') === 'STUDENT' ? (
+                  <div className="grid grid-cols-2 gap-4">
+                    <Form.Item
+                      label="当前学段"
+                      name="grade"
+                      rules={[{ required: true, message: '请选择学段' }]}
+                    >
+                      <Select size="large" placeholder="选择学段">
+                        <Option value="初一上">初一上</Option>
+                        <Option value="初一下">初一下</Option>
+                        <Option value="初二上">初二上</Option>
+                        <Option value="初二下">初二下</Option>
+                        <Option value="初三上">初三上</Option>
+                        <Option value="初三下">初三下</Option>
+                      </Select>
+                    </Form.Item>
 
-              <Form.Item
-                label="教材版本"
-                name="textbookVersion"
-                rules={[{ required: true, message: '请选择教材版本' }]}
-                initialValue="人教版"
-              >
-                <Select size="large" placeholder="选择教材版本">
-                  <Option value="人教版">人教版</Option>
-                  <Option value="浙教版">浙教版</Option>
-                </Select>
-              </Form.Item>
+                    <Form.Item
+                      label="教材版本"
+                      name="textbookVersion"
+                      rules={[{ required: true, message: '请选择教材版本' }]}
+                    >
+                      <Select size="large" placeholder="选择教材版本">
+                        <Option value="人教版">人教版</Option>
+                        <Option value="浙教版">浙教版</Option>
+                      </Select>
+                    </Form.Item>
 
-              <Form.Item
-                label="数学自评学力"
-                name="level"
-                rules={[{ required: true, message: '请选择学力' }]}
-                className="col-span-2"
-              >
-                <Select size="large" placeholder="选择学力水平">
-                  <Option value="基础">基础薄弱</Option>
-                  <Option value="中等">中等水平</Option>
-                  <Option value="拔高">拔高冲刺</Option>
-                </Select>
-              </Form.Item>
-            </div>
+                    <Form.Item
+                      label="数学自评学力"
+                      name="level"
+                      rules={[{ required: true, message: '请选择学力' }]}
+                      className="col-span-2"
+                    >
+                      <Select size="large" placeholder="选择学力水平">
+                        <Option value="基础">基础薄弱</Option>
+                        <Option value="中等">中等水平</Option>
+                        <Option value="拔高">拔高冲刺</Option>
+                      </Select>
+                    </Form.Item>
+                  </div>
+                ) : null
+              }
+            </Form.Item>
 
             <Form.Item className="mb-0 mt-4">
               <Button type="primary" htmlType="submit" size="large" block loading={loading} className="bg-blue-600">

@@ -10,7 +10,7 @@ import { useUserStore } from '@/store/userStore'
 export default function Login() {
   const [loading, setLoading] = useState(false)
   const router = useRouter()
-  const { setToken, setUsername } = useUserStore()
+  const { setToken, setUsername, setRole } = useUserStore()
 
   const onFinish = async (values: any) => {
     setLoading(true)
@@ -18,8 +18,27 @@ export default function Login() {
       const res: any = await authApi.login(values.username, values.password)
       setToken(res.data.token)
       setUsername(res.data.username)
+      if (res.data.role) {
+        setRole(res.data.role)
+      }
       message.success('登录成功')
-      router.push('/dashboard')
+
+      if (res.data.requirePasswordChange) {
+        message.warning('系统检测到您使用的是默认密码，请先修改密码以确保账户安全', 5)
+        router.push('/profile?action=change-password')
+        return
+      }
+
+      if (res.data.role === 'TEACHER') {
+        router.push('/teacher/dashboard')
+      } else {
+        if (!res.data.grade || !res.data.level) {
+          message.info('请先完善个人信息')
+          router.push('/profile')
+        } else {
+          router.push('/dashboard')
+        }
+      }
     } catch (error: any) {
       message.error(error.response?.data?.error || '登录失败')
     } finally {

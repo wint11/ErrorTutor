@@ -38,7 +38,9 @@ export async function POST(request: NextRequest) {
       token,
       username: user.username,
       grade: user.grade,
-      level: user.level
+      level: user.level,
+      role: user.role,
+      requirePasswordChange: user.requirePasswordChange
     })
 
     response.cookies.set('token', token, {

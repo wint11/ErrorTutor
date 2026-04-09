@@ -32,7 +32,12 @@ export async function GET(request: NextRequest) {
         textbookVersion: true,
         aiPortrait: true,
         aiPortraitUpdatedAt: true,
-        createdAt: true
+        createdAt: true,
+        class: {
+          select: {
+            name: true
+          }
+        }
       }
     })
 
@@ -68,15 +73,23 @@ export async function PUT(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { grade, level, textbookVersion } = body
+    const { grade, level, textbookVersion, password } = body
+    
+    let updateData: any = {
+      ...(grade && { grade }),
+      ...(level && { level }),
+      ...(textbookVersion && { textbookVersion })
+    }
+
+    if (password) {
+      const { hashPassword } = await import('@/lib/auth')
+      updateData.password = await hashPassword(password)
+      updateData.requirePasswordChange = false
+    }
 
     const updatedUser = await prisma.user.update({
       where: { id: payload.userId },
-      data: {
-        ...(grade && { grade }),
-        ...(level && { level }),
-        ...(textbookVersion && { textbookVersion })
-      },
+      data: updateData,
       select: {
         id: true,
         username: true,

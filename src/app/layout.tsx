@@ -1,13 +1,7 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
 import "./globals.css";
 import { AntdRegistry } from '@ant-design/nextjs-registry';
 import Navbar from "@/components/Navbar";
-
-const inter = Inter({
-  variable: "--font-inter",
-  subsets: ["latin"],
-});
 
 export const metadata: Metadata = {
   title: "数智学堂 - 个性化错题驱动学习平台",
@@ -22,7 +16,7 @@ export default function RootLayout({
   return (
     <html lang="zh-CN">
       <body
-        className={`${inter.variable} font-sans antialiased min-h-screen bg-gray-50 flex flex-col`}
+        className="font-sans antialiased min-h-screen bg-gray-50 flex flex-col"
       >
         <AntdRegistry>
           <Navbar />

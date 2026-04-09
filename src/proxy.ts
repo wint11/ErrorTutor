@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
 // 需要登录才能访问的路径
-const protectedPaths = ['/dashboard', '/tutoring', '/growth', '/profile']
+const protectedPaths = ['/dashboard', '/tutoring', '/growth', '/profile', '/teacher']
 
 // 已登录用户不能访问的路径（如登录页）
 const authPaths = ['/login', '/register']

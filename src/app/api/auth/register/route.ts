@@ -4,7 +4,7 @@ import { hashPassword, generateToken } from '@/lib/auth'
 
 export async function POST(request: NextRequest) {
   try {
-    const { username, password, grade, level, textbookVersion } = await request.json()
+    const { username, password, grade, level, textbookVersion, role } = await request.json()
 
     if (!username || !password) {
       return NextResponse.json(
@@ -39,7 +39,8 @@ export async function POST(request: NextRequest) {
         password: hashedPassword,
         grade,
         level,
-        textbookVersion: textbookVersion || '人教版'
+        textbookVersion: textbookVersion || '人教版',
+        role: role || 'STUDENT'
       }
     })
 
@@ -49,7 +50,8 @@ export async function POST(request: NextRequest) {
       username: user.username,
       grade: user.grade,
       level: user.level,
-      textbookVersion: user.textbookVersion
+      textbookVersion: user.textbookVersion,
+      role: user.role
     }, { status: 201 })
 
     response.cookies.set('token', token, {

@@ -45,8 +45,12 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(false)
   const [startingChallenge, setStartingChallenge] = useState(false)
 
+  const [exercises, setExercises] = useState<any[]>([])
+  const [exercisesLoading, setExercisesLoading] = useState(false)
+
   useEffect(() => {
     fetchStats()
+    fetchExercises()
   }, [])
 
   const fetchStats = async () => {
@@ -58,6 +62,18 @@ export default function Dashboard() {
       message.error('获取统计数据失败')
     } finally {
       setLoading(false)
+    }
+  }
+
+  const fetchExercises = async () => {
+    setExercisesLoading(true)
+    try {
+      const res: any = await dashboardApi.getExercises()
+      setExercises(res.data)
+    } catch (error) {
+      console.error('获取班级任务失败', error)
+    } finally {
+      setExercisesLoading(false)
     }
   }
 
@@ -79,6 +95,29 @@ export default function Dashboard() {
     } catch (error: any) {
       message.error(error.response?.data?.error || '开启挑战失败')
       setStartingChallenge(false)
+    }
+  }
+
+  const handleStartExercise = async (exercise: any) => {
+    try {
+      // Create a tutoring session for the exercise
+      const res: any = await tutoringApi.createSession(
+        `【班级练习任务：${exercise.title}】\n\n${exercise.content}`, 
+        '通用辅导', 
+        undefined, 
+        undefined, 
+        undefined, 
+        undefined, 
+        undefined,
+        undefined,
+        exercise.knowledgePoint,
+        exercise.id
+      )
+      
+      message.success('已开启练习模式')
+      router.push(`/tutoring/${res.data.id}`)
+    } catch (error: any) {
+      message.error(error.response?.data?.error || '开启练习失败')
     }
   }
 
@@ -126,6 +165,61 @@ export default function Dashboard() {
           </Card>
         </Col>
       </Row>
+
+      {/* 班级学习任务 */}
+      {exercises.length > 0 && (
+        <div className="mb-8">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-xl font-bold text-slate-800 m-0">
+              <span className="bg-blue-100 text-blue-700 px-2 py-1 rounded text-sm mr-2 align-middle">
+                {exercises[0]?.className}
+              </span>
+              最新学习任务
+            </h3>
+          </div>
+          <Row gutter={[16, 16]}>
+            {exercises.slice(0, 3).map(exercise => (
+              <Col xs={24} md={8} key={exercise.id}>
+                <Card 
+                  className={`rounded-xl shadow-sm border ${exercise.status === 'COMPLETED' ? 'border-emerald-100 bg-emerald-50/30' : 'border-blue-100 hover:border-blue-300 transition-colors cursor-pointer'}`}
+                  bodyStyle={{ padding: '20px' }}
+                  onClick={() => {
+                    if (exercise.status !== 'COMPLETED') {
+                      // 启动一次辅导 session 作为练习答题
+                      handleStartExercise(exercise)
+                    }
+                  }}
+                >
+                  <div className="flex justify-between items-start mb-3">
+                    <div className="font-bold text-slate-800 text-lg line-clamp-1" title={exercise.title}>{exercise.title}</div>
+                    <Tag color={exercise.status === 'COMPLETED' ? 'success' : 'processing'} className="m-0 border-none">
+                      {exercise.status === 'COMPLETED' ? '已完成' : '待完成'}
+                    </Tag>
+                  </div>
+                  {exercise.knowledgePoint && (
+                    <div className="mb-3">
+                      <Tag className="text-xs text-slate-500 bg-slate-50 border-slate-200">
+                        {exercise.knowledgePoint}
+                      </Tag>
+                    </div>
+                  )}
+                  <div className="text-slate-500 text-sm line-clamp-2 mb-4">
+                    {exercise.content}
+                  </div>
+                  <div className="flex justify-between items-center text-xs text-slate-400">
+                    <span>发布于: {dayjs(exercise.createdAt).format('MM-DD')}</span>
+                    {exercise.dueDate && (
+                      <span className={dayjs().isAfter(exercise.dueDate) ? 'text-red-400' : ''}>
+                        截止: {dayjs(exercise.dueDate).format('MM-DD')}
+                      </span>
+                    )}
+                  </div>
+                </Card>
+              </Col>
+            ))}
+          </Row>
+        </div>
+      )}
 
       <Row gutter={[24, 24]}>
         <Col xs={24} lg={16}>

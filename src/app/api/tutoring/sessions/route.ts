@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const { problemText, mode = '通用辅导', timeLimit, difficulty = '中等', groupId, questionCount = 1, topic, mistakeText } = await request.json()
+    const { problemText, mode = '通用辅导', timeLimit, difficulty = '中等', groupId, questionCount = 1, topic, mistakeText, knowledgePoint: passedKnowledgePoint, exerciseId } = await request.json()
 
     if (!problemText) {
       return NextResponse.json(
@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
     }
 
     let problemContent = problemText
-    let knowledgePoint = null
+    let knowledgePoint = passedKnowledgePoint || null
     const kpMatch = problemContent.match(/<knowledge>([\s\S]*?)<\/knowledge>/)
     if (kpMatch) {
       knowledgePoint = kpMatch[1].trim()
@@ -47,6 +47,7 @@ export async function POST(request: NextRequest) {
           difficulty,
           topic,
           mistakeText,
+          exerciseId: isFirst ? exerciseId : null,
           status: isFirst ? 'IN_PROGRESS' : 'PENDING',
           currentStep: 0,
           timeLimit: timeLimit ? parseInt(timeLimit) : null
@@ -56,6 +57,27 @@ export async function POST(request: NextRequest) {
       createdSessions.push(session)
       
       if (isFirst) {
+        // 如果是第一题且有关联的 exerciseId，检查是否已经有提交记录，如果没有则创建
+        if (exerciseId) {
+          const existingSubmission = await prisma.exerciseSubmission.findFirst({
+            where: {
+              exerciseId: exerciseId,
+              studentId: payload.userId
+            }
+          })
+          
+          if (!existingSubmission) {
+            await prisma.exerciseSubmission.create({
+              data: {
+                exerciseId: exerciseId,
+                studentId: payload.userId,
+                isCorrect: false, // 初始状态为未完成/未做对
+                content: '正在通过 AI 辅导进行练习...'
+              }
+            })
+          }
+        }
+
         // 创建初始 AI 消息
         await prisma.chatMessage.create({
           data: {
